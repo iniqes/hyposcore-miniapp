@@ -54,8 +54,8 @@ export interface EvalResult {
   /** Итоговый балл 0–10. */
   score_final: number;
   verdict: Verdict;
-  /** Режим оценки: быстрый / глубокий. */
-  mode: 'quick' | 'deep';
+  /** Режим оценки: экспресс / глубокий (как отдаёт бэк). */
+  mode: 'express' | 'deep';
   /** Общая уверенность разбора. */
   confidence: ConfidenceLevel;
   /** Критерии по идентификаторам (все 14). */
@@ -69,14 +69,12 @@ export interface EvalResult {
 export interface EvidenceSource {
   title: string;
   url?: string;
-  /** Дата обращения. */
-  accessed?: string;
 }
 
 /** Метаданные 5 групп (для метрик и легенды радара). */
 export const GROUPS: GroupMeta[] = [
   { id: 'A', title: 'Рынок и спрос', weight: 0.35 },
-  { id: 'B', title: 'Конкуренция и moat', weight: 0.25 },
+  { id: 'B', title: 'Конкуренция и защищённость', weight: 0.25 },
   { id: 'C', title: 'Реализуемость', weight: 0.2 },
   { id: 'D', title: 'Риски', weight: 0.08 },
   { id: 'E', title: 'AI-специфика', weight: 0.12 },
@@ -251,12 +249,10 @@ export const mockResult: EvalResult = {
     {
       title: 'rbc.ru — объём рынка EdTech РФ 2025',
       url: 'https://rbc.ru',
-      accessed: '05.07.2026',
     },
     {
       title: 'appstore — рейтинги решений «математика по фото»',
       url: 'https://apps.apple.com',
-      accessed: '05.07.2026',
     },
   ],
 };

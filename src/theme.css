@@ -497,6 +497,72 @@ body {
   gap: 6px;
 }
 
+/* ── skeleton загрузки (плашки на месте контента) ────────── */
+.skeleton {
+  padding-top: 26px;
+  display: grid;
+  gap: 12px;
+}
+.sk {
+  border-radius: 4px;
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(
+    100deg,
+    var(--paper-2) 40%,
+    var(--raised) 50%,
+    var(--paper-2) 60%
+  );
+  background-size: 200% 100%;
+  animation: sk-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes sk-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+.sk-kicker { width: 42%; height: 14px; }
+.sk-title { width: 86%; height: 36px; margin-bottom: 8px; }
+.sk-score { height: 200px; }
+.sk-radar { height: 340px; margin: 16px 0 8px; }
+.sk-row { height: 64px; }
+
+/* ── экраны состояний (ошибки / пусто) ───────────────────── */
+.state {
+  padding: 30vh 0 48px;
+}
+.state h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(26px, 8vw, 34px);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  margin: 0 0 14px;
+}
+.state-note {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.btn {
+  margin-top: 24px;
+  display: inline-block;
+  border: 0;
+  border-radius: 40px;
+  padding: 13px 28px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+
 /* ── тёмная тема Telegram (инверсия, акцент сохранён) ─────── */
 :root[data-theme="dark"] {
   --paper: #16171c;

@@ -46,9 +46,11 @@ function groupOf(id: CriterionId): CriterionGroup {
 
 interface Props {
   result: EvalResult;
+  /** true — на экране образец данных (mock), а не живой отчёт. */
+  isMock?: boolean;
 }
 
-export default function ReportScreen({ result }: Props) {
+export default function ReportScreen({ result, isMock = false }: Props) {
   const [openId, setOpenId] = useState<CriterionId | null>(null);
 
   const radarData = CRITERION_ORDER.map((id) => ({
@@ -73,7 +75,7 @@ export default function ReportScreen({ result }: Props) {
           HYPOSCORE
         </span>
         <span className="mode">
-          {result.mode === 'deep' ? 'глубокий разбор' : 'быстрый разбор'}
+          {result.mode === 'deep' ? 'глубокий разбор' : 'экспресс-разбор'}
         </span>
       </div>
 
@@ -275,24 +277,32 @@ export default function ReportScreen({ result }: Props) {
           <div className="sec-index">05 · Источники</div>
           <h2>На чём основана оценка</h2>
         </div>
-        <div className="srclist">
-          {result.evidence_sources.map((s, i) => (
-            <a
-              key={i}
-              href={s.url ?? '#'}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {s.title}
-              {s.accessed ? ` · ${s.accessed}` : ''}
-            </a>
-          ))}
-        </div>
+        {result.evidence_sources.length > 0 ? (
+          <div className="srclist">
+            {result.evidence_sources.map((s, i) => (
+              <a
+                key={i}
+                href={s.url ?? '#'}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {s.title}
+              </a>
+            ))}
+          </div>
+        ) : (
+          <p className="sec-note">
+            Экспресс-разбор идёт без веб-поиска — источники появятся в глубоком
+            режиме.
+          </p>
+        )}
       </section>
 
       <footer className="foot">
-        <span className="mono">HypoScore · Mini App «Отчёт» · скаффолд Фазы 5</span>
-        <span className="mono">данные — образец (mock)</span>
+        <span className="mono">HypoScore · Mini App «Отчёт»</span>
+        <span className="mono">
+          {isMock ? 'данные — образец (mock)' : 'разбор Агента 01 · HypoScore'}
+        </span>
       </footer>
     </div>
   );
