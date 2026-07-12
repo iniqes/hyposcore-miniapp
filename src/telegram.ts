@@ -28,6 +28,8 @@ export interface TelegramWebApp {
   ready(): void;
   expand(): void;
   isVersionAtLeast(version: string): boolean;
+  /** Открыть t.me-ссылку нативно, не закрывая мини-апп (может отсутствовать в старых клиентах). */
+  openTelegramLink?(url: string): void;
 }
 
 declare global {
@@ -55,6 +57,23 @@ export function startParam(): string | undefined {
 export function ready(): void {
   tg?.ready();
   tg?.expand();
+}
+
+/** Username бота — публичная константа, не секрет (переопределяется через VITE_BOT_USERNAME). */
+const BOT_USERNAME: string = import.meta.env.VITE_BOT_USERNAME || 'hyposcore_bot';
+
+/**
+ * Открыть чат с ботом на команде: deep-link t.me/<bot>?start=cmd_<имя>
+ * (бот разбирает cmd_* в обработчике /start). Внутри Telegram — нативно
+ * через openTelegramLink; в обычном браузере/превью — новой вкладкой.
+ */
+export function openBotCommand(cmd: string): void {
+  const url = `https://t.me/${BOT_USERNAME}?start=cmd_${cmd}`;
+  if (tg?.openTelegramLink) {
+    tg.openTelegramLink(url);
+  } else {
+    window.open(url, '_blank');
+  }
 }
 
 /** Нативный BackButton доступен с Bot API 6.1. */

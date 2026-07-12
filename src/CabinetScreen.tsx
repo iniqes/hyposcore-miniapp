@@ -6,6 +6,7 @@ import type {
   TariffOption,
   UserAnalytics,
 } from './api';
+import { openBotCommand } from './telegram';
 
 /** Цвет вердикта по баллу (та же семантика, что в отчёте). */
 function verdictVar(score: number): string {
@@ -71,6 +72,21 @@ interface BotCommand {
   cmd: string;
   desc: string;
 }
+
+/** Команды, которые бот умеет принимать deep-link'ом ?start=cmd_<имя>. */
+const DEEPLINK_CMDS = new Set([
+  'start',
+  'help',
+  'demo',
+  'method',
+  'ideas',
+  'new',
+  'quota',
+  'tariff',
+  'feedback',
+  'privacy',
+  'app',
+]);
 
 const COMMAND_GROUPS: { title: string; items: BotCommand[] }[] = [
   {
@@ -281,19 +297,35 @@ export default function CabinetScreen({
           <div className="sec-index">{idx()} · Команды</div>
           <h2>Команды сервиса</h2>
           <p className="sec-note">
-            Всё управление — в чате с ботом: отправьте команду обычным
-            сообщением.
+            Тап по строке откроет чат с ботом сразу на нужной команде — или
+            отправьте её обычным сообщением.
           </p>
         </div>
         {COMMAND_GROUPS.map((group) => (
           <div className="cmd-group" key={group.title}>
             <div className="cmd-group-title mono">{group.title}</div>
-            {group.items.map((c) => (
-              <div className="cmd-row" key={c.cmd}>
-                <span className="cmd">{c.cmd}</span>
-                <span className="cmd-desc">{c.desc}</span>
-              </div>
-            ))}
+            {group.items.map((c) => {
+              const name = c.cmd.slice(1);
+              return DEEPLINK_CMDS.has(name) ? (
+                <button
+                  type="button"
+                  className="cmd-row"
+                  key={c.cmd}
+                  onClick={() => openBotCommand(name)}
+                >
+                  <span className="cmd">{c.cmd}</span>
+                  <span className="cmd-desc">{c.desc}</span>
+                  <span className="arrow" aria-hidden="true">
+                    →
+                  </span>
+                </button>
+              ) : (
+                <div className="cmd-row" key={c.cmd}>
+                  <span className="cmd">{c.cmd}</span>
+                  <span className="cmd-desc">{c.desc}</span>
+                </div>
+              );
+            })}
           </div>
         ))}
       </section>
@@ -354,7 +386,12 @@ export default function CabinetScreen({
           </div>
           <div className="plan-list">
             {tariffs.map((plan) => (
-              <div className="plan-row" key={plan.tier || plan.title}>
+              <button
+                type="button"
+                className="plan-row"
+                key={plan.tier || plan.title}
+                onClick={() => openBotCommand('tariff')}
+              >
                 <div className="plan-body">
                   <div className="plan-name">
                     {plan.title}
@@ -379,13 +416,23 @@ export default function CabinetScreen({
                     'бесплатно'
                   )}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
+          <button
+            type="button"
+            className="pay-cta"
+            onClick={() => openBotCommand('tariff')}
+          >
+            Выбрать тариф в боте{' '}
+            <span className="arrow" aria-hidden="true">
+              →
+            </span>
+          </button>
           <p className="pay-note">
-            Оплата проходит в чате бота: отправьте команду{' '}
-            <span className="cmd-inline">/tariff</span> и выберите тариф.
-            Платёж принимает ЮKassa, чек придёт на почту.
+            Оплата проходит в чате бота командой{' '}
+            <span className="cmd-inline">/tariff</span>. Платёж принимает
+            ЮKassa, чек придёт на почту.
           </p>
         </section>
       )}

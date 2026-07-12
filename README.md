@@ -28,6 +28,15 @@ npm run build
 npm run preview
 ```
 
+## Переменные окружения
+
+Задаются в `.env.development` / `.env.production`:
+
+- `VITE_API_BASE` — базовый URL API HypoScore, без завершающего слэша.
+- `VITE_BOT_USERNAME` — username бота для deep-link'ов `t.me/<bot>?start=cmd_*`
+  (кликабельные команды и оплата в «Кабинете»). Публичная константа, не секрет.
+  По умолчанию `hyposcore_bot` — менять не нужно.
+
 ## Стек
 
 - **React 18 + TypeScript** — UI и типы формы результата (`EvalResult`).

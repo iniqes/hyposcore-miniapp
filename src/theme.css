@@ -655,7 +655,7 @@ body {
 }
 .cmd-row {
   display: grid;
-  grid-template-columns: 96px 1fr;
+  grid-template-columns: 96px 1fr auto;
   gap: 14px;
   align-items: baseline;
   padding: 8px 0;
@@ -671,6 +671,35 @@ body {
   font-size: 15px;
   line-height: 1.5;
   color: var(--ink-2);
+}
+.cmd-row .arrow {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--muted);
+}
+/* строка-кнопка: без подложек и рамок — только курсор, подчёркивание и прозрачность */
+button.cmd-row {
+  appearance: none;
+  background: none;
+  border: 0;
+  margin: 0;
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button.cmd-row:hover .cmd,
+button.cmd-row:focus-visible .cmd {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+button.cmd-row:hover .arrow,
+button.cmd-row:focus-visible .arrow {
+  color: var(--accent);
+}
+button.cmd-row:active {
+  opacity: 0.55;
 }
 
 /* тариф и лимиты — типографика + волосяная линия прогресса */
@@ -721,6 +750,31 @@ body {
   border-top: 0;
   padding-top: 0;
 }
+/* строка тарифа — кнопка (тап → /tariff в боте), рисунок строки не меняется */
+button.plan-row {
+  appearance: none;
+  background: none;
+  margin: 0;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+}
+button.plan-row:first-child {
+  border-top: 0;
+}
+button.plan-row:hover .plan-name,
+button.plan-row:focus-visible .plan-name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+button.plan-row:active {
+  opacity: 0.55;
+}
 .plan-name {
   font-family: var(--font-display);
   font-weight: 700;
@@ -762,8 +816,38 @@ body {
   color: var(--muted);
   letter-spacing: 0;
 }
-.pay-note {
+/* явный CTA оплаты — типографика, акцент как у ссылок в отчёте */
+.pay-cta {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 4px 0;
   margin: 26px 0 0;
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  color: var(--accent);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.pay-cta .arrow {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  margin-left: 6px;
+}
+.pay-cta:hover,
+.pay-cta:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.pay-cta:active {
+  opacity: 0.55;
+}
+.pay-note {
+  margin: 14px 0 0;
   font-size: 15px;
   line-height: 1.6;
   color: var(--ink-2);
