@@ -1,47 +1,53 @@
-/* HypoScore — графитовая палитра (Фаза 5, Mini App «Отчёт»).
-   Источник стиля: docs/DESIGN_REFERENCE.md + docs/report_style_preview.html */
+/* HypoScore Mini App — серия «Графит» на белом.
+   Правило владельца: белый фон + воздух + типографика.
+   Никаких подложек, рамок-коробок и чипов — иерархия строится
+   кеглем, весом, цветом и волосяными линиями. */
 
 :root {
-  /* бумага и поверхности */
-  --paper: #edebe3;
-  --paper-2: #e5e2d8;
-  --raised: #f6f4ee;
+  /* бумага */
+  --paper: #ffffff;
 
   /* чернила / текст */
   --ink: #16171c;
   --ink-2: #3a3b43;
-  --muted: #6c6d77;
+  --muted: #71727b;
 
-  /* линии */
-  --line: rgba(22, 23, 28, 0.16);
-  --line-soft: rgba(22, 23, 28, 0.09);
+  /* волосяные линии */
+  --line: rgba(22, 23, 28, 0.14);
+  --line-soft: rgba(22, 23, 28, 0.07);
 
   /* хром-акцент — ГРАФИТ (фирменный) */
   --accent: #2b2d33;
   --accent-ink: #f6f4ee;
-  --accent-tint: rgba(43, 45, 51, 0.08);
+  --accent-tint: rgba(43, 45, 51, 0.07);
 
-  /* семантика вердикта (не меняется) */
-  --v-strong: #2ecc71; /* 8–10   */
-  --v-good: #3fa7ff;   /* 6–7.9  */
-  --v-pivot: #f5a623;  /* 4–5.9  */
-  --v-no: #e74c3c;     /* <4     */
+  /* семантика вердикта — как текст на белом (затемнённые, ≥4:1) */
+  --v-strong: #118a4e; /* 8–10   */
+  --v-good: #1d6fd1;   /* 6–7.9  */
+  --v-pivot: #b06f00;  /* 4–5.9  */
+  --v-no: #d92d20;     /* <4     */
 
-  /* 5 групп критериев */
-  --gA: #c2790f; /* A · Рынок и спрос      */
-  --gB: #7a5af8; /* B · Конкуренция        */
-  --gC: #0e9e83; /* C · Реализуемость      */
-  --gD: #e5484d; /* D · Риски              */
-  --gE: #2aa0c4; /* E · AI-специфика       */
+  /* 5 групп критериев (фирменные, для меток/графики) */
+  --gA: #c2790f; /* A · Рынок и спрос   */
+  --gB: #7a5af8; /* B · Конкуренция     */
+  --gC: #0e9e83; /* C · Реализуемость   */
+  --gD: #e5484d; /* D · Риски           */
+  --gE: #2aa0c4; /* E · AI-специфика    */
+  /* доля группового цвета в тексте: на белом чуть затемняем чернилами */
+  --gmix: 82%;
 
   /* шрифты */
   --font-display: "Bricolage Grotesque", system-ui, sans-serif;
   --font-body: "Spline Sans", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  /* мобильная ширина 360–430 */
-  --appw: 430px;
-  --pad: 18px;
+  /* мобильный лист */
+  --appw: 480px;
+  --pad: 22px;
+
+  /* скелетон */
+  --sk-a: #f1f1ef;
+  --sk-b: #fafaf8;
 }
 
 * {
@@ -56,13 +62,10 @@ html {
 body {
   margin: 0;
   font-family: var(--font-body);
+  font-size: 16px;
   color: var(--ink);
-  line-height: 1.5;
-  background-color: var(--paper);
-  background-image:
-    linear-gradient(var(--line-soft) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
-  background-size: 64px 64px;
+  line-height: 1.6;
+  background: var(--paper);
   overflow-x: hidden;
 }
 
@@ -79,14 +82,18 @@ body {
   color: var(--muted);
 }
 
-/* ── контейнер приложения (мобильный лист) ───────────────── */
+/* цвет группы как текст: чуть темнее на белом, чистый в тёмной теме */
+.gtext {
+  color: color-mix(in srgb, var(--g, var(--accent)) var(--gmix), var(--ink));
+}
+
+/* ── контейнер приложения ────────────────────────────────── */
 .app {
   width: 100%;
   max-width: var(--appw);
   margin: 0 auto;
   min-height: 100vh;
-  padding: 0 var(--pad)
-    max(env(safe-area-inset-bottom), 28px);
+  padding: 0 var(--pad) max(env(safe-area-inset-bottom), 32px);
 }
 
 /* ── topbar / brand ──────────────────────────────────────── */
@@ -101,7 +108,7 @@ body {
   height: 52px;
   padding-top: env(safe-area-inset-top);
   backdrop-filter: blur(8px);
-  background: color-mix(in srgb, var(--paper) 82%, transparent);
+  background: color-mix(in srgb, var(--paper) 86%, transparent);
   border-bottom: 1px solid var(--line);
 }
 .brand {
@@ -127,6 +134,23 @@ body {
   color: var(--muted);
 }
 
+/* текстовая кнопка «← назад» (фолбэк, если нет BackButton) */
+.backlink {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ── kicker ──────────────────────────────────────────────── */
 .kicker {
   display: inline-flex;
@@ -138,7 +162,7 @@ body {
   text-transform: uppercase;
   color: var(--accent);
   font-weight: 600;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .kicker::before {
   content: "";
@@ -149,40 +173,25 @@ body {
 
 /* ── герой ───────────────────────────────────────────────── */
 .hero {
-  padding: 26px 0 8px;
+  padding: 34px 0 12px;
 }
 .hero h1 {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(26px, 8vw, 34px);
-  line-height: 1;
-  letter-spacing: -0.035em;
-  margin: 0 0 20px;
+  font-size: clamp(27px, 7.6vw, 33px);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  margin: 0;
 }
-.scorebox {
-  border: 1px solid var(--line);
-  background: var(--raised);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.scorebox > div {
-  padding: 20px 22px;
-}
-.scorebox > div + div {
-  border-top: 1px solid var(--line);
-}
-.panel-label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 8px;
+
+/* балл и вердикт — чистой типографикой, без коробок */
+.scoreblock {
+  margin-top: 34px;
 }
 .score-num {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 72px;
+  font-size: 88px;
   line-height: 0.8;
   letter-spacing: -0.04em;
   color: var(--verdict);
@@ -191,74 +200,77 @@ body {
   font-size: 26px;
   color: var(--muted);
   font-weight: 700;
+  letter-spacing: -0.02em;
 }
-.verdict-pill {
-  display: inline-block;
-  margin-top: 14px;
-  padding: 8px 16px;
-  border-radius: 40px;
-  background: var(--verdict);
-  color: #0c121a;
+.verdict-label {
+  margin-top: 18px;
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  color: var(--verdict);
 }
 .verdict-action {
-  margin: 12px 0 0;
-  font-size: 14px;
+  margin: 10px 0 0;
+  font-size: 16px;
+  line-height: 1.6;
   color: var(--ink-2);
+  max-width: 36ch;
 }
-.panel-text {
-  margin: 0;
-  font-size: 14px;
-  color: var(--ink-2);
-}
-.panel-text b {
-  color: var(--ink);
-  font-weight: 600;
+.hero .meta {
+  margin-top: 22px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 /* ── секции ──────────────────────────────────────────────── */
 .band {
-  padding: 30px 0;
+  padding: 40px 0 8px;
   border-top: 1px solid var(--line);
+  margin-top: 34px;
 }
 .sec-index {
   font-family: var(--font-mono);
   font-weight: 500;
   font-size: 12px;
   letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--accent);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 .band h2 {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(22px, 6.5vw, 28px);
-  line-height: 1;
-  letter-spacing: -0.03em;
+  font-size: clamp(22px, 6.4vw, 27px);
+  line-height: 1.05;
+  letter-spacing: -0.028em;
   margin: 0;
 }
 .sec-note {
   margin: 12px 0 0;
   color: var(--muted);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.55;
+  max-width: 40ch;
 }
 .sec-head {
-  margin-bottom: 22px;
+  margin-bottom: 26px;
 }
 
 /* ── радар ───────────────────────────────────────────────── */
 .radar-wrap {
-  width: 100%;
-  height: 340px;
-  margin: 0 -6px;
+  height: 350px;
+  margin: 0 calc(-1 * var(--pad) / 2);
+  width: calc(100% + var(--pad));
 }
 .radar-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 14px;
-  margin-top: 14px;
+  gap: 10px 16px;
+  margin-top: 18px;
 }
 .radar-legend .lg {
   display: inline-flex;
@@ -270,247 +282,379 @@ body {
   color: var(--ink-2);
 }
 .radar-legend .lg .sw {
-  width: 11px;
-  height: 11px;
+  width: 10px;
+  height: 10px;
   border-radius: 3px;
 }
 
-/* ── группы (метрики) ────────────────────────────────────── */
-.metrics {
+/* ── баллы по группам — строки, не плитки ────────────────── */
+.groups {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
 }
-.metric {
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--raised);
-  padding: 16px;
-  border-top: 3px solid var(--g);
+.group-row {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 16px;
+  align-items: baseline;
+  padding: 16px 0;
+  border-top: 1px solid var(--line-soft);
 }
-.metric .num {
+.group-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.group-row .num {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 34px;
-  line-height: 0.85;
+  font-size: 30px;
+  line-height: 0.9;
   letter-spacing: -0.04em;
-  color: var(--g);
 }
-.metric .lab {
-  margin-top: 8px;
-  font-size: 13px;
-  line-height: 1.35;
-  color: var(--ink-2);
+.group-row .lab {
+  font-size: 16px;
+  color: var(--ink);
 }
-.metric .w {
+.group-row .lab .code {
   font-family: var(--font-mono);
   font-size: 11px;
+  letter-spacing: 0.08em;
   color: var(--muted);
-  margin-top: 5px;
+  margin-right: 8px;
 }
 
-/* ── карточки критериев (progressive disclosure) ─────────── */
+/* ── критерии: развёрнутый читаемый разбор ───────────────── */
 .crit-list {
   display: grid;
-  gap: 10px;
 }
 .crit {
-  background: var(--raised);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--g, var(--accent));
-  border-radius: 4px;
-  padding: 16px 18px;
-  cursor: pointer;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.25s;
-  -webkit-tap-highlight-color: transparent;
+  padding: 28px 14px 24px;
+  margin: 0 -14px;
+  border-top: 1px solid var(--line-soft);
+  scroll-margin-top: 76px;
+  border-radius: 10px;
 }
-.crit:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 18px 40px -28px rgba(22, 23, 28, 0.5);
+.crit:first-child {
+  border-top: 0;
+  padding-top: 4px;
 }
-.crit.open {
-  box-shadow: 0 10px 30px -24px rgba(22, 23, 28, 0.5);
+.crit.flash {
+  animation: crit-flash 1.8s ease-out;
+}
+@keyframes crit-flash {
+  0% { background: var(--accent-tint); }
+  55% { background: var(--accent-tint); }
+  100% { background: transparent; }
 }
 .crit-head {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: baseline;
-  gap: 12px;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: start;
 }
-.crit .k {
+.crit .code {
   font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--g, var(--accent));
   font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 7px;
 }
 .crit h3 {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 16px;
-  letter-spacing: -0.02em;
+  font-size: 17.5px;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
   margin: 0;
+  color: var(--ink);
 }
 .crit .big-num {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 30px;
+  font-size: 32px;
   line-height: 0.85;
   letter-spacing: -0.04em;
-  color: var(--g, var(--accent));
   white-space: nowrap;
+  padding-top: 2px;
 }
 .crit .big-num small {
   font-size: 15px;
   color: var(--muted);
+  font-weight: 700;
+}
+.crit-rationale {
+  margin: 13px 0 0;
+  font-size: 16px;
+  line-height: 1.62;
+  color: var(--ink-2);
+}
+.crit-meta {
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  line-height: 1.7;
+  word-break: break-word;
+}
+.crit-meta .src {
+  color: var(--accent);
 }
 .crit .inverted {
   display: inline-block;
-  margin-top: 6px;
+  margin-left: 10px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 10.5px;
   letter-spacing: 0.06em;
   color: var(--muted);
-}
-.crit-detail {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px dashed var(--line);
-  display: grid;
-  gap: 12px;
-}
-.crit-detail p {
-  margin: 0;
-  color: var(--ink-2);
-  font-size: 14px;
-  line-height: 1.5;
-}
-.crit-tags {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.tag {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  padding: 4px 9px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--muted);
-}
-.tag.src {
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-}
-.crit .hint {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
+  text-transform: none;
 }
 
-/* ── баннер вердикта ─────────────────────────────────────── */
+/* ── «почему балл срезан» и допущения — тезисы ───────────── */
+.cutlist,
+.assumptions {
+  display: grid;
+  gap: 18px;
+}
+.cutlist .t,
+.assumptions .t {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: baseline;
+}
+.cutlist .t .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--v-no);
+  transform: translateY(-1px);
+}
+.assumptions .t .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  transform: translateY(-1px);
+}
+.cutlist .t p,
+.assumptions .t p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.assumptions .t p {
+  color: var(--ink-2);
+}
+
+/* ── баннер вердикта (фирменная графитовая плашка серии) ──── */
 .banner {
   background: var(--accent);
   color: var(--accent-ink);
   border-radius: 4px;
-  padding: 24px;
+  padding: 26px 24px;
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 .banner .k {
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--accent-ink) 76%, transparent);
+  color: color-mix(in srgb, var(--accent-ink) 72%, transparent);
 }
 .banner p {
   margin: 0;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 20px;
-  line-height: 1.16;
-  letter-spacing: -0.02em;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
 }
 
 /* ── риски (red team) ────────────────────────────────────── */
 .tezis {
   display: grid;
-  gap: 10px;
+  gap: 20px;
 }
 .tezis .t {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 12px;
+  gap: 14px;
   align-items: baseline;
-  background: var(--raised);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 16px 18px;
 }
 .tezis .t .dot {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--v-no);
-  transform: translateY(2px);
+  transform: translateY(-1px);
 }
 .tezis .t p {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.6;
   color: var(--ink);
-}
-.tezis .t p b {
-  font-weight: 600;
 }
 
 /* ── источники ───────────────────────────────────────────── */
 .srclist {
   display: grid;
-  gap: 8px;
 }
 .srclist a {
   font-family: var(--font-mono);
   font-size: 12.5px;
+  line-height: 1.6;
   color: var(--accent);
   text-decoration: none;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--raised);
+  padding: 13px 0;
+  border-top: 1px solid var(--line-soft);
   display: block;
   word-break: break-word;
+}
+.srclist a:first-child {
+  border-top: 0;
+  padding-top: 0;
 }
 
 /* ── подвал ──────────────────────────────────────────────── */
 .foot {
   border-top: 1px solid var(--line);
+  margin-top: 40px;
   padding: 18px 0 6px;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-/* ── skeleton загрузки (плашки на месте контента) ────────── */
-.skeleton {
-  padding-top: 26px;
+/* ── КАБИНЕТ ─────────────────────────────────────────────── */
+
+/* сводка — ряд крупных чисел типографикой */
+.statrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px 34px;
+  margin-top: 30px;
+}
+.statrow .stat .num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 34px;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+}
+.statrow .stat .num small {
+  font-size: 16px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.statrow .stat .lab {
+  margin-top: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* распределение вердиктов — строки с точкой */
+.verdrow {
   display: grid;
   gap: 12px;
 }
+.verdrow .v {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+.verdrow .v .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translateY(-1px);
+}
+.verdrow .v .n {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  min-width: 18px;
+}
+.verdrow .v .l {
+  font-size: 15.5px;
+  color: var(--ink-2);
+}
+
+/* список идей — строки с волосяными линиями */
+.idea-list {
+  display: grid;
+}
+.idea-row {
+  display: grid;
+  grid-template-columns: 58px 1fr auto;
+  gap: 16px;
+  align-items: baseline;
+  padding: 20px 14px;
+  margin: 0 -14px;
+  border-top: 1px solid var(--line-soft);
+  cursor: pointer;
+  border-radius: 10px;
+  -webkit-tap-highlight-color: transparent;
+}
+.idea-row:first-child {
+  border-top: 0;
+}
+.idea-row:active {
+  background: var(--accent-tint);
+}
+.idea-row .score {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+.idea-row .score.na {
+  color: var(--muted);
+  font-weight: 700;
+}
+.idea-row .body .t {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16.5px;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.idea-row .body .m {
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.idea-row .arrow {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ── skeleton загрузки ───────────────────────────────────── */
+.skeleton {
+  padding-top: 34px;
+  display: grid;
+  gap: 14px;
+}
 .sk {
-  border-radius: 4px;
-  border: 1px solid var(--line-soft);
+  border-radius: 6px;
   background: linear-gradient(
     100deg,
-    var(--paper-2) 40%,
-    var(--raised) 50%,
-    var(--paper-2) 60%
+    var(--sk-a) 40%,
+    var(--sk-b) 50%,
+    var(--sk-a) 60%
   );
   background-size: 200% 100%;
   animation: sk-shimmer 1.6s ease-in-out infinite;
@@ -520,32 +664,32 @@ body {
   to { background-position: -100% 0; }
 }
 .sk-kicker { width: 42%; height: 14px; }
-.sk-title { width: 86%; height: 36px; margin-bottom: 8px; }
-.sk-score { height: 200px; }
-.sk-radar { height: 340px; margin: 16px 0 8px; }
-.sk-row { height: 64px; }
+.sk-title { width: 86%; height: 34px; margin-bottom: 10px; }
+.sk-score { width: 60%; height: 120px; }
+.sk-radar { height: 340px; margin: 18px 0 8px; }
+.sk-row { height: 58px; }
 
 /* ── экраны состояний (ошибки / пусто) ───────────────────── */
 .state {
-  padding: 30vh 0 48px;
+  padding: 26vh 0 48px;
 }
 .state h1 {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: clamp(26px, 8vw, 34px);
-  line-height: 1.05;
-  letter-spacing: -0.035em;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
   margin: 0 0 14px;
 }
 .state-note {
   margin: 0;
-  max-width: 34ch;
-  font-size: 15px;
-  line-height: 1.55;
+  max-width: 36ch;
+  font-size: 16px;
+  line-height: 1.6;
   color: var(--ink-2);
 }
 .btn {
-  margin-top: 24px;
+  margin-top: 26px;
   display: inline-block;
   border: 0;
   border-radius: 40px;
@@ -566,14 +710,22 @@ body {
 /* ── тёмная тема Telegram (инверсия, акцент сохранён) ─────── */
 :root[data-theme="dark"] {
   --paper: #16171c;
-  --paper-2: #1d1e24;
-  --raised: #22242b;
   --ink: #edebe3;
   --ink-2: #c7c5bd;
   --muted: #8a8b93;
   --line: rgba(237, 235, 227, 0.16);
-  --line-soft: rgba(237, 235, 227, 0.07);
+  --line-soft: rgba(237, 235, 227, 0.08);
   --accent: #c9cad2;
   --accent-ink: #16171c;
-  --accent-tint: rgba(201, 202, 210, 0.1);
+  --accent-tint: rgba(201, 202, 210, 0.09);
+
+  /* на тёмном — фирменные яркие */
+  --v-strong: #2ecc71;
+  --v-good: #3fa7ff;
+  --v-pivot: #f5a623;
+  --v-no: #e74c3c;
+  --gmix: 100%;
+
+  --sk-a: #1d1e24;
+  --sk-b: #24252c;
 }

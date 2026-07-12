@@ -80,7 +80,23 @@ interface RawResult {
   evidence_sources?: string[];
   evidence_refs?: RawEvidenceRef[];
   mode?: string;
+  /** id сработавших киллер-ограничений методики (D1_low, A1_low, copyable…). */
+  applied_killers?: string[];
+  /** Допущения разбора: чего не хватило в данных. */
+  assumptions?: string[];
 }
+
+/* Человеческие формулировки киллеров — по rubric_v1.yaml бэка
+   (внутренности методики — id и потолки — наружу не отдаём). */
+const KILLER_LABELS: Record<string, string> = {
+  D1_low:
+    'Критичный юридический риск: без юридической проработки идею двигать нельзя.',
+  A1_low: 'Спрос не подтверждён: нет живой боли — нет продукта.',
+  copyable: 'Продукт легко копируется, защитного барьера нет.',
+};
+
+const KILLER_FALLBACK =
+  'Разбор нашёл критичный провал — итоговый балл ограничен.';
 
 export interface IdeaResponse {
   id: number;
@@ -149,6 +165,12 @@ export function toEvalResult(data: IdeaResponse): EvalResult {
     criteria,
     red_team: r.red_team ?? [],
     evidence_sources,
+    killers: (r.applied_killers ?? []).map(
+      (id) => KILLER_LABELS[id] ?? KILLER_FALLBACK,
+    ),
+    assumptions: (r.assumptions ?? []).filter(
+      (a) => typeof a === 'string' && a.trim() !== '',
+    ),
   };
 }
 
@@ -162,4 +184,50 @@ export async function fetchIdea(id: string | number): Promise<EvalResult> {
 export async function fetchIdeas(): Promise<IdeaListItem[]> {
   const data = await apiGet<{ ideas?: IdeaListItem[] }>('/api/ideas');
   return data.ideas ?? [];
+}
+
+/* ── Кабинет: /api/me и /api/analytics ───────────────────── */
+
+/** Пользователь из GET /api/me (по валидному initData). */
+export interface MeUser {
+  id: number;
+  first_name: string;
+  username: string;
+}
+
+/** Сводка GET /api/analytics: количество идей, баллы, вердикты. */
+export interface UserAnalytics {
+  ideas_count: number;
+  versions_total: number;
+  score_avg: number | null;
+  score_max: number | null;
+  score_min: number | null;
+  /** Распределение вердиктов: ярлык → сколько идей. */
+  verdicts: Record<string, number>;
+  last_updated: string | null;
+}
+
+/** Кто открыл кабинет: GET /api/me. */
+export async function fetchMe(): Promise<MeUser> {
+  const data = await apiGet<{ user?: Partial<MeUser> }>('/api/me');
+  const u = data.user ?? {};
+  return {
+    id: u.id ?? 0,
+    first_name: u.first_name ?? '',
+    username: u.username ?? '',
+  };
+}
+
+/** Персональная сводка для кабинета: GET /api/analytics. */
+export async function fetchAnalytics(): Promise<UserAnalytics> {
+  const data = await apiGet<Partial<UserAnalytics>>('/api/analytics');
+  return {
+    ideas_count: data.ideas_count ?? 0,
+    versions_total: data.versions_total ?? 0,
+    score_avg: data.score_avg ?? null,
+    score_max: data.score_max ?? null,
+    score_min: data.score_min ?? null,
+    verdicts: data.verdicts ?? {},
+    last_updated: data.last_updated ?? null,
+  };
 }

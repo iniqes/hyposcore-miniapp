@@ -8,10 +8,14 @@ import './theme.css';
 tg?.ready();
 tg?.expand();
 
-// Минимальная тема: фон из Telegram, если клиент его отдал
-// (сетка-паттерн из theme.css остаётся поверх).
-if (tg?.themeParams.bg_color) {
-  document.body.style.backgroundColor = tg.themeParams.bg_color;
+// Тема: белый лист (светлая) или графитовая инверсия (тёмная).
+// Цвет фона Telegram не тянем — палитра серии «Графит» самодостаточна.
+// ?theme=dark — ручной просмотр тёмной темы вне Telegram.
+if (
+  tg?.colorScheme === 'dark' ||
+  new URLSearchParams(window.location.search).get('theme') === 'dark'
+) {
+  document.documentElement.dataset.theme = 'dark';
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
