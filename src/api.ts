@@ -195,6 +195,37 @@ export interface MeUser {
   username: string;
 }
 
+/** Текущий тариф пользователя из GET /api/me (расширенный контракт). */
+export interface TariffCurrent {
+  tier: string;
+  title: string;
+  /** Кредитов в неделю; null — безлимит или квоты выключены. */
+  credits_week: number | null;
+  /** Остаток на этой неделе; null — не считается. */
+  remaining: number | null;
+  /** Когда лимит обнулится (строка даты бэка). */
+  reset: string | null;
+}
+
+/** Позиция каталога тарифов из GET /api/me. */
+export interface TariffOption {
+  tier: string;
+  title: string;
+  price_rub: number;
+  credits_week: number | null;
+  hint?: string;
+}
+
+/**
+ * Полный ответ GET /api/me. Старый бэкенд отдаёт только user —
+ * тогда tariff = null и tariffs = [], кабинет работает как раньше.
+ */
+export interface MeResponse {
+  user: MeUser;
+  tariff: TariffCurrent | null;
+  tariffs: TariffOption[];
+}
+
 /** Сводка GET /api/analytics: количество идей, баллы, вердикты. */
 export interface UserAnalytics {
   ideas_count: number;
@@ -207,14 +238,49 @@ export interface UserAnalytics {
   last_updated: string | null;
 }
 
-/** Кто открыл кабинет: GET /api/me. */
-export async function fetchMe(): Promise<MeUser> {
-  const data = await apiGet<{ user?: Partial<MeUser> }>('/api/me');
+/** Кто открыл кабинет + тариф: GET /api/me (тарифные поля опциональны). */
+export async function fetchMe(): Promise<MeResponse> {
+  const data = await apiGet<{
+    user?: Partial<MeUser>;
+    tariff?: Partial<TariffCurrent> | null;
+    tariffs?: Array<Partial<TariffOption> | null> | null;
+  }>('/api/me');
+
   const u = data.user ?? {};
+  const t = data.tariff;
+
   return {
-    id: u.id ?? 0,
-    first_name: u.first_name ?? '',
-    username: u.username ?? '',
+    user: {
+      id: u.id ?? 0,
+      first_name: u.first_name ?? '',
+      username: u.username ?? '',
+    },
+    // Нет tariff в ответе (старый бэкенд) — блок тарифа не показываем.
+    tariff:
+      t && typeof t === 'object'
+        ? {
+            tier: t.tier ?? '',
+            title: t.title ?? '',
+            credits_week: t.credits_week ?? null,
+            remaining: t.remaining ?? null,
+            reset: t.reset ?? null,
+          }
+        : null,
+    tariffs: Array.isArray(data.tariffs)
+      ? data.tariffs
+          .filter(
+            (x): x is Partial<TariffOption> => x != null && typeof x === 'object',
+          )
+          .map((x) => ({
+            tier: x.tier ?? '',
+            title: x.title ?? '',
+            price_rub: x.price_rub ?? 0,
+            credits_week: x.credits_week ?? null,
+            hint: x.hint || undefined,
+          }))
+          // Позиция без названия бесполезна в каталоге — пропускаем.
+          .filter((x) => x.title !== '')
+      : [],
   };
 }
 

@@ -7,6 +7,8 @@ import {
   fetchMe,
   type IdeaListItem,
   type MeUser,
+  type TariffCurrent,
+  type TariffOption,
   type UserAnalytics,
 } from './api';
 import { backButtonSupported, initData, showBackButton, startParam } from './telegram';
@@ -29,6 +31,10 @@ type ReportState =
 
 interface CabinetData {
   me: MeUser;
+  /** null — бэкенд без тарифного контракта: блок тарифа не показываем. */
+  tariff: TariffCurrent | null;
+  /** [] — каталог тарифов недоступен: блок оплаты не показываем. */
+  tariffs: TariffOption[];
   ideas: IdeaListItem[];
   analytics: UserAnalytics;
 }
@@ -121,12 +127,21 @@ export default function App() {
       return;
     }
     try {
-      const [me, ideas, analytics] = await Promise.all([
+      const [meResp, ideas, analytics] = await Promise.all([
         fetchMe(),
         fetchIdeas(),
         fetchAnalytics(),
       ]);
-      setCabinet({ phase: 'ready', data: { me, ideas, analytics } });
+      setCabinet({
+        phase: 'ready',
+        data: {
+          me: meResp.user,
+          tariff: meResp.tariff,
+          tariffs: meResp.tariffs,
+          ideas,
+          analytics,
+        },
+      });
     } catch (e) {
       setCabinet({ phase: 'error', kind: errorKind(e) });
     }
@@ -197,6 +212,8 @@ export default function App() {
     return (
       <CabinetScreen
         me={cabinet.data.me}
+        tariff={cabinet.data.tariff}
+        tariffs={cabinet.data.tariffs}
         ideas={cabinet.data.ideas}
         analytics={cabinet.data.analytics}
         onOpenIdea={(id) => void openIdea(id)}

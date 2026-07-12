@@ -155,6 +155,45 @@ export const mockCabinet = {
     },
     last_updated: '2026-07-10 18:12:00',
   },
+  // Тариф и каталог — по расширенному контракту GET /api/me.
+  // Цены здесь — заглушки для просмотра дизайна, не прайс сервиса.
+  tariff: {
+    tier: 'free',
+    title: 'Бесплатный',
+    credits_week: 20,
+    remaining: 14,
+    reset: '2026-07-13 00:00:00',
+  },
+  tariffs: [
+    {
+      tier: 'free',
+      title: 'Бесплатный',
+      price_rub: 0,
+      credits_week: 20,
+      hint: 'Попробовать разбор в деле — без карты и обязательств.',
+    },
+    {
+      tier: 'start',
+      title: 'Старт',
+      price_rub: 399,
+      credits_week: 60,
+      hint: 'Хватает, чтобы довести одну идею до сильной версии.',
+    },
+    {
+      tier: 'pro',
+      title: 'Про',
+      price_rub: 990,
+      credits_week: 200,
+      hint: 'Для потока гипотез: сравнивайте варианты, не считая попытки.',
+    },
+    {
+      tier: 'max',
+      title: 'Макс',
+      price_rub: 1990,
+      credits_week: null,
+      hint: 'Без недельного лимита — для команд и акселераторов.',
+    },
+  ],
 };
 
 export const mockResult: EvalResult = {

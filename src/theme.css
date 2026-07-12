@@ -642,6 +642,140 @@ body {
   color: var(--muted);
 }
 
+/* команды сервиса — моноширинные команды с описаниями */
+.cmd-group {
+  margin-top: 28px;
+}
+.cmd-group:first-of-type {
+  margin-top: 0;
+}
+.cmd-group-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.cmd-row {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 14px;
+  align-items: baseline;
+  padding: 8px 0;
+}
+.cmd-row .cmd {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.cmd-row .cmd-desc {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+/* тариф и лимиты — типографика + волосяная линия прогресса */
+.tariff-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.tariff-line {
+  margin: 12px 0 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 36ch;
+}
+.tariff-line strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+.quota-track {
+  margin-top: 18px;
+  height: 2px;
+  background: var(--line-soft);
+}
+.quota-fill {
+  height: 100%;
+  background: var(--accent);
+}
+.tariff-reset {
+  margin-top: 14px;
+}
+
+/* оплата: каталог тарифов — строки, не карточки */
+.plan-list {
+  display: grid;
+}
+.plan-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: baseline;
+  padding: 20px 0;
+  border-top: 1px solid var(--line-soft);
+}
+.plan-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.plan-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.plan-name .you {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-left: 10px;
+}
+.plan-creds {
+  margin-top: 6px;
+  font-size: 11px;
+}
+.plan-hint {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 34ch;
+}
+.plan-price {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.plan-price small {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+.pay-note {
+  margin: 26px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 40ch;
+}
+.pay-note .cmd-inline {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--accent);
+}
+
 /* ── skeleton загрузки ───────────────────────────────────── */
 .skeleton {
   padding-top: 34px;
