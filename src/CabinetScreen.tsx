@@ -83,6 +83,7 @@ const DEEPLINK_CMDS = new Set([
   'new',
   'quota',
   'tariff',
+  'invite',
   'feedback',
   'privacy',
   'app',
@@ -104,6 +105,7 @@ const COMMAND_GROUPS: { title: string; items: BotCommand[] }[] = [
     items: [
       { cmd: '/quota', desc: 'сколько осталось от недельного лимита' },
       { cmd: '/tariff', desc: 'тарифы и ранний доступ' },
+      { cmd: '/invite', desc: 'позвать знакомого — бонус обоим' },
     ],
   },
   {
