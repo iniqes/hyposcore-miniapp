@@ -212,6 +212,8 @@ export interface TariffOption {
   tier: string;
   title: string;
   price_rub: number;
+  /** Период оплаты для суффикса цены: 'нед' (Старт) | 'мес' (Про/Максимум). */
+  period: string;
   credits_week: number | null;
   hint?: string;
 }
@@ -275,6 +277,8 @@ export async function fetchMe(): Promise<MeResponse> {
             tier: x.tier ?? '',
             title: x.title ?? '',
             price_rub: x.price_rub ?? 0,
+            // Старый бэкенд без period → 'мес' (совместимость); Старт присылает 'нед'.
+            period: x.period ?? 'мес',
             credits_week: x.credits_week ?? null,
             hint: x.hint || undefined,
           }))

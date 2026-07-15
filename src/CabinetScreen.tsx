@@ -412,7 +412,7 @@ export default function CabinetScreen({
                   {plan.price_rub > 0 ? (
                     <>
                       {rub(plan.price_rub)}
-                      <small>/мес</small>
+                      <small>/{plan.period}</small>
                     </>
                   ) : (
                     'бесплатно'
@@ -434,7 +434,8 @@ export default function CabinetScreen({
           <p className="pay-note">
             Оплата проходит в чате бота командой{' '}
             <span className="cmd-inline">/tariff</span>. Платёж принимает
-            ЮKassa, чек придёт на почту.
+            ЮKassa, чек придёт на почту. Разовый платёж за период доступа —
+            автосписания нет.
           </p>
         </section>
       )}
