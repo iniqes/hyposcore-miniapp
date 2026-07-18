@@ -734,6 +734,15 @@ button.cmd-row:active {
   margin-top: 14px;
 }
 
+/* пригласить друга: личная ссылка — мономоноширинная строка, без подложки/рамки */
+.invite-link {
+  margin: 16px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--accent);
+  word-break: break-all;
+}
+
 /* оплата: каталог тарифов — строки, не карточки */
 .plan-list {
   display: grid;

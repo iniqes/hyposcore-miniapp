@@ -60,7 +60,36 @@ export function ready(): void {
 }
 
 /** Username бота — публичная константа, не секрет (переопределяется через VITE_BOT_USERNAME). */
-const BOT_USERNAME: string = import.meta.env.VITE_BOT_USERNAME || 'hyposcore_bot';
+export const BOT_USERNAME: string = import.meta.env.VITE_BOT_USERNAME || 'hyposcore_bot';
+
+/**
+ * Рефералы включены? Build-time флаг (VITE_REFERRALS_ENABLED), синхронизируется с ботовым
+ * REFERRALS_ENABLED. По умолчанию ВЫКЛ — блок «Пригласить друга» скрыт (shadow): пока бот не
+ * начисляет бонус, не показываем пользователю обещание, которое он не выполнит.
+ */
+export function referralsEnabled(): boolean {
+  const v = String(import.meta.env.VITE_REFERRALS_ENABLED ?? '').trim().toLowerCase();
+  return v === '1' || v === 'true' || v === 'yes' || v === 'on';
+}
+
+/** Личная реф-ссылка: t.me/<бот>?start=ref_<uid> (бот ловит ref_ в /start). */
+export function inviteLink(uid: number): string {
+  return `https://t.me/${BOT_USERNAME}?start=ref_${uid}`;
+}
+
+/**
+ * Открыть нативный диалог Telegram «Поделиться» с реф-ссылкой и текстом.
+ * Внутри Telegram — через openTelegramLink (не закрывая апп); в браузере — новой вкладкой.
+ */
+export function shareInvite(uid: number, text: string): void {
+  const link = inviteLink(uid);
+  const url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+  if (tg?.openTelegramLink) {
+    tg.openTelegramLink(url);
+  } else {
+    window.open(url, '_blank');
+  }
+}
 
 /**
  * Открыть чат с ботом на команде: deep-link t.me/<bot>?start=cmd_<имя>

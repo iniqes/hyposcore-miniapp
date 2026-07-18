@@ -6,7 +6,11 @@ import type {
   TariffOption,
   UserAnalytics,
 } from './api';
-import { openBotCommand } from './telegram';
+import { openBotCommand, referralsEnabled, inviteLink, shareInvite } from './telegram';
+
+/** Текст-подводка к ссылке при нажатии «Поделиться» (голос бота — живо, без канцелярита). */
+const INVITE_SHARE_TEXT =
+  'Проверяю идеи в HypoScore — честный разбор рынка, конкурентов и рисков. Попробуй:';
 
 /** Цвет вердикта по баллу (та же семантика, что в отчёте). */
 function verdictVar(score: number): string {
@@ -105,7 +109,8 @@ const COMMAND_GROUPS: { title: string; items: BotCommand[] }[] = [
     items: [
       { cmd: '/quota', desc: 'сколько осталось от недельного лимита' },
       { cmd: '/tariff', desc: 'тарифы и ранний доступ' },
-      { cmd: '/invite', desc: 'позвать знакомого — бонус обоим' },
+      // «Пригласить друга» вынесено в отдельный блок-экран (ниже, под флагом рефералов),
+      // поэтому строкой-командой здесь не дублируем.
     ],
   },
   {
@@ -290,6 +295,35 @@ export default function CabinetScreen({
               источники.
             </p>
           </div>
+        </section>
+      )}
+
+      {/* пригласить друга — отдельный экран-приглашение (под флагом рефералов) */}
+      {referralsEnabled() && (
+        <section className="band">
+          <div className="sec-head">
+            <div className="sec-index">{idx()} · Друзья</div>
+            <h2>Пригласить друга</h2>
+            <p className="sec-note">
+              Позовите знакомого по личной ссылке. Как только он разберёт первую
+              идею — вам обоим упадёт по 10 проверок. Честный обмен, без условий.
+            </p>
+          </div>
+          <div className="invite-link mono">{inviteLink(me.id)}</div>
+          <button
+            type="button"
+            className="pay-cta"
+            onClick={() => shareInvite(me.id, INVITE_SHARE_TEXT)}
+          >
+            📤 Поделиться ссылкой{' '}
+            <span className="arrow" aria-hidden="true">
+              →
+            </span>
+          </button>
+          <p className="pay-note">
+            Бонусные проверки тратятся первыми, поверх недельного лимита, и не
+            сгорают в конце недели.
+          </p>
         </section>
       )}
 
