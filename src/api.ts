@@ -180,10 +180,51 @@ export async function fetchIdea(id: string | number): Promise<EvalResult> {
   return toEvalResult(data);
 }
 
-/** Список идей пользователя (свежие первыми): GET /api/ideas. */
-export async function fetchIdeas(): Promise<IdeaListItem[]> {
-  const data = await apiGet<{ ideas?: IdeaListItem[] }>('/api/ideas');
-  return data.ideas ?? [];
+/** Порядок списка: свежие сверху либо самые ценные (по баллу) сверху. */
+export type IdeasSort = 'fresh' | 'score';
+
+export interface IdeasQuery {
+  limit?: number;
+  offset?: number;
+  /** Поиск по заголовку и тексту идеи; пустая строка = без фильтра. */
+  q?: string;
+  sort?: IdeasSort;
+}
+
+/** Страница списка идей. total — сколько всего под текущим фильтром (для «N из M»). */
+export interface IdeasPage {
+  items: IdeaListItem[];
+  total: number;
+}
+
+/**
+ * Страница списка идей: GET /api/ideas?limit&offset&q&sort.
+ * Бэк отдаёт total начиная с версии с пагинацией; на случай отставания
+ * прод-бэка от Pages (деплои независимы) фолбэчим total на длину списка —
+ * тогда экран просто не покажет «показать ещё», но не сломается.
+ */
+export async function fetchIdeas(params: IdeasQuery = {}): Promise<IdeasPage> {
+  const qs = new URLSearchParams();
+  if (params.limit != null) qs.set('limit', String(params.limit));
+  if (params.offset) qs.set('offset', String(params.offset));
+  if (params.q) qs.set('q', params.q);
+  if (params.sort) qs.set('sort', params.sort);
+  const suffix = qs.toString() ? `?${qs}` : '';
+
+  const data = await apiGet<{ ideas?: IdeaListItem[]; total?: number }>(
+    `/api/ideas${suffix}`,
+  );
+  const raw = data.ideas ?? [];
+  if (data.total != null) return { items: raw, total: data.total };
+
+  // total нет — бэкенд ещё без пагинации (Pages и VPS деплоятся независимо):
+  // он проигнорировал limit и отдал свою пачку целиком. Режем сами, иначе
+  // кабинет вместо топ-10 развернётся во весь список. Поиск в этом режиме не
+  // фильтрует — это ожидаемо и лечится деплоем бэка.
+  return {
+    items: params.limit != null ? raw.slice(0, params.limit) : raw,
+    total: raw.length,
+  };
 }
 
 /* ── Кабинет: /api/me и /api/analytics ───────────────────── */

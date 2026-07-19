@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react';
 import type {
   IdeaListItem,
   MeUser,
@@ -6,19 +5,12 @@ import type {
   TariffOption,
   UserAnalytics,
 } from './api';
+import IdeaRow, { dateRu, ru } from './IdeaRow';
 import { openBotCommand, referralsEnabled, inviteLink, shareInvite } from './telegram';
 
 /** Текст-подводка к ссылке при нажатии «Поделиться» (голос бота — живо, без канцелярита). */
 const INVITE_SHARE_TEXT =
   'Проверяю идеи в HypoScore — честный разбор рынка, конкурентов и рисков. Попробуй:';
-
-/** Цвет вердикта по баллу (та же семантика, что в отчёте). */
-function verdictVar(score: number): string {
-  if (score >= 8) return 'var(--v-strong)';
-  if (score >= 6) return 'var(--v-good)';
-  if (score >= 4) return 'var(--v-pivot)';
-  return 'var(--v-no)';
-}
 
 /** Цвет по ярлыку вердикта (для распределения в сводке). */
 function verdictColorByLabel(label: string): string {
@@ -28,20 +20,6 @@ function verdictColorByLabel(label: string): string {
   if (l.startsWith('требует')) return 'var(--v-pivot)';
   if (l.startsWith('не рекомендуется')) return 'var(--v-no)';
   return 'var(--muted)';
-}
-
-/** Русский формат числа: 5.5 → «5,5». */
-function ru(n: number): string {
-  return String(n).replace('.', ',');
-}
-
-/** «1 версия», «3 версии», «7 версий». */
-function versionsRu(n: number): string {
-  const d10 = n % 10;
-  const d100 = n % 100;
-  if (d10 === 1 && d100 !== 11) return `${n} версия`;
-  if (d10 >= 2 && d10 <= 4 && (d100 < 12 || d100 > 14)) return `${n} версии`;
-  return `${n} версий`;
 }
 
 /** «14 кредитов», «1 кредит», «2 кредита». */
@@ -56,18 +34,6 @@ function creditsRu(n: number): string {
 /** «1990» → «1 990 ₽» (неразрывный тонкий пробел из toLocaleString). */
 function rub(n: number): string {
   return `${n.toLocaleString('ru-RU')} ₽`;
-}
-
-/** «2026-07-09 18:12:00» → «9 июля» (с годом, если не текущий). */
-function dateRu(s: string): string {
-  const d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
-  if (Number.isNaN(d.getTime())) return '';
-  const now = new Date();
-  return d.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    ...(d.getFullYear() !== now.getFullYear() ? { year: 'numeric' } : {}),
-  });
 }
 
 /* ── Команды бота: статичный справочник, сгруппирован по смыслу ── */
@@ -131,10 +97,15 @@ interface Props {
   tariff: TariffCurrent | null;
   /** Пустой массив — каталога нет: блок «Оплата» скрыт. */
   tariffs: TariffOption[];
+  /** Топ идей по баллу (не весь список) — кабинет не должен расти бесконечно. */
   ideas: IdeaListItem[];
+  /** Сколько идей всего: и для подписи, и для кнопки перехода в архив. */
+  ideasTotal: number;
   analytics: UserAnalytics;
   /** Тап по идее — открыть её отчёт. */
   onOpenIdea: (id: number) => void;
+  /** Открыть экран «Все идеи» — полный архив с поиском. */
+  onOpenAll: () => void;
 }
 
 export default function CabinetScreen({
@@ -142,10 +113,14 @@ export default function CabinetScreen({
   tariff,
   tariffs,
   ideas,
+  ideasTotal,
   analytics,
   onOpenIdea,
+  onOpenAll,
 }: Props) {
   const hasIdeas = ideas.length > 0;
+  /** Часть идей не поместилась в топ — меняет заголовок и подводку блока. */
+  const hasMore = ideasTotal > ideas.length;
   const verdictEntries = Object.entries(analytics.verdicts).sort(
     (a, b) => b[1] - a[1],
   );
@@ -208,57 +183,26 @@ export default function CabinetScreen({
 
       {hasIdeas ? (
         <>
-          {/* список идей */}
+          {/* топ идей по баллу; полный архив — на отдельном экране */}
           <section className="band">
             <div className="sec-head">
               <div className="sec-index">{idx()} · Идеи</div>
-              <h2>Ваши разборы</h2>
+              <h2>{hasMore ? 'Сильнейшие разборы' : 'Ваши разборы'}</h2>
               <p className="sec-note">
-                Свежие сверху. Тап открывает полный отчёт: радар, критерии,
-                риски и источники.
+                {hasMore
+                  ? `Здесь ${ideas.length} лучших по баллу — кабинет не растёт бесконечно. Остальные (всего ${ideasTotal}) с поиском по словам — во «Всех идеях».`
+                  : 'Сильнейшие сверху. Тап открывает полный отчёт: радар, критерии, риски и источники.'}
               </p>
             </div>
             <div className="idea-list">
               {ideas.map((idea) => (
-                <div
-                  key={idea.id}
-                  className="idea-row"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => onOpenIdea(idea.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      onOpenIdea(idea.id);
-                    }
-                  }}
-                >
-                  <div
-                    className={`score${idea.score == null ? ' na' : ''}`}
-                    style={
-                      idea.score != null
-                        ? ({ color: verdictVar(idea.score) } as CSSProperties)
-                        : undefined
-                    }
-                  >
-                    {idea.score != null ? ru(idea.score) : '—'}
-                  </div>
-                  <div className="body">
-                    <div className="t">{idea.title || 'Идея без названия'}</div>
-                    <div className="m">
-                      {[
-                        idea.verdict,
-                        dateRu(idea.updated),
-                        idea.versions > 1 ? versionsRu(idea.versions) : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </div>
-                  </div>
-                  <span className="arrow">→</span>
-                </div>
+                <IdeaRow key={idea.id} idea={idea} onOpen={onOpenIdea} />
               ))}
             </div>
+            {/* Вход в архив показываем всегда: поиск нужен и когда идей ровно 10 */}
+            <button type="button" className="btn more" onClick={onOpenAll}>
+              Все идеи ({ideasTotal}) →
+            </button>
           </section>
 
           {/* распределение вердиктов */}

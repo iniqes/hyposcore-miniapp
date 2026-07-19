@@ -6,6 +6,8 @@ import {
   fetchIdeas,
   fetchMe,
   type IdeaListItem,
+  type IdeasPage,
+  type IdeasQuery,
   type MeUser,
   type TariffCurrent,
   type TariffOption,
@@ -14,6 +16,11 @@ import {
 import { backButtonSupported, initData, showBackButton, startParam } from './telegram';
 import { mockCabinet, mockResult, type EvalResult } from './mockData';
 import CabinetScreen from './CabinetScreen';
+import IdeasScreen from './IdeasScreen';
+import { ARCHIVE_PAGE, useIdeasArchive } from './useIdeasArchive';
+
+/** Сколько идей показываем в кабинете: топ по баллу, остальное — экран «Все идеи». */
+const TOP_IDEAS = 10;
 
 // recharts тяжёлый — ReportScreen едет отдельным чанком, skeleton виден сразу.
 const ReportScreen = lazy(() => import('./ReportScreen'));
@@ -35,7 +42,10 @@ interface CabinetData {
   tariff: TariffCurrent | null;
   /** [] — каталог тарифов недоступен: блок оплаты не показываем. */
   tariffs: TariffOption[];
+  /** Топ-10 по баллу, а не весь список. */
   ideas: IdeaListItem[];
+  /** Сколько идей всего — для подписи и кнопки «Все идеи (N)». */
+  ideasTotal: number;
   analytics: UserAnalytics;
 }
 
@@ -45,14 +55,24 @@ type CabinetState =
   | { phase: 'ready'; data: CabinetData };
 
 /**
- * Экраны: кабинет (дефолт без ?idea=) и отчёт.
+ * Экраны: кабинет (дефолт без ?idea=), архив «Все идеи» и отчёт.
  * from: 'direct' — открыто по ссылке на идею (назад некуда),
- * 'cabinet' — из списка идей (назад — BackButton / «← Мои идеи»).
+ * иначе — экран, с которого пришли: туда и возвращает BackButton.
  */
+type Parented = 'cabinet' | 'ideas';
+
 type View =
   | { screen: 'cabinet' }
+  | { screen: 'ideas' }
   | { screen: 'report'; from: 'direct' }
-  | { screen: 'report'; from: 'cabinet'; ideaId: number };
+  | { screen: 'report'; from: Parented; ideaId: number };
+
+/** Куда ведёт «назад»: null — возвращаться некуда (корневой экран/прямая ссылка). */
+function parentOf(view: View): Parented | null {
+  if (view.screen === 'ideas') return 'cabinet';
+  if (view.screen === 'report' && view.from !== 'direct') return view.from;
+  return null;
+}
 
 /** Mock-режим: явный ?mock=1 или dev-сборка, открытая вне Telegram. */
 function isMockMode(): boolean {
@@ -67,6 +87,27 @@ function isMockMode(): boolean {
 /** ?mock=cabinet — образец кабинета (просмотр дизайна вне Telegram). */
 function isMockCabinet(): boolean {
   return new URLSearchParams(window.location.search).get('mock') === 'cabinet';
+}
+
+/**
+ * Страница архива для mock-режима: бэка нет, поэтому те же поиск/сортировка/срез
+ * считаются по демо-списку. Держит `?mock=cabinet` рабочим для просмотра дизайна.
+ */
+function mockIdeasPage(params: IdeasQuery): IdeasPage {
+  const q = (params.q ?? '').trim().toLowerCase();
+  const found = q
+    ? mockCabinet.ideas.filter((i) => i.title.toLowerCase().includes(q))
+    : mockCabinet.ideas.slice();
+  found.sort((a, b) =>
+    params.sort === 'score'
+      ? (b.score ?? -1) - (a.score ?? -1)
+      : b.updated.localeCompare(a.updated),
+  );
+  const offset = params.offset ?? 0;
+  return {
+    items: found.slice(offset, offset + (params.limit ?? ARCHIVE_PAGE)),
+    total: found.length,
+  };
 }
 
 /** ?idea= из query или start_param диплинка — открыть сразу отчёт. */
@@ -95,6 +136,19 @@ export default function App() {
   );
   const [cabinet, setCabinet] = useState<CabinetState>({ phase: 'loading' });
   const [report, setReport] = useState<ReportState>({ phase: 'loading' });
+  // Защёлка: архив не ходит в сеть, пока его не открыли, но однажды открытый
+  // остаётся «живым» — уход в отчёт и возврат не сбрасывают поиск и подгруженное.
+  const [archiveOpened, setArchiveOpened] = useState(false);
+
+  // Источник страниц архива: в mock-режиме бэка нет — фильтруем демо-список на месте.
+  const fetchArchivePage = useCallback(
+    (params: IdeasQuery): Promise<IdeasPage> =>
+      isMockCabinet()
+        ? Promise.resolve(mockIdeasPage(params))
+        : fetchIdeas(params),
+    [],
+  );
+  const archive = useIdeasArchive(fetchArchivePage, archiveOpened);
 
   /* ── загрузчики ── */
 
@@ -119,7 +173,13 @@ export default function App() {
   const loadCabinet = useCallback(async () => {
     setCabinet({ phase: 'loading' });
     if (isMockCabinet()) {
-      setCabinet({ phase: 'ready', data: mockCabinet });
+      // Через тот же mockIdeasPage, что и архив: иначе mock показал бы весь список
+      // без сортировки по баллу и не воспроизводил бы боевое поведение кабинета.
+      const page = mockIdeasPage({ sort: 'score', limit: TOP_IDEAS });
+      setCabinet({
+        phase: 'ready',
+        data: { ...mockCabinet, ideas: page.items, ideasTotal: page.total },
+      });
       return;
     }
     if (!initData()) {
@@ -127,9 +187,11 @@ export default function App() {
       return;
     }
     try {
-      const [meResp, ideas, analytics] = await Promise.all([
+      // Кабинету нужен только топ по баллу: полный список живёт на экране «Все идеи».
+      // total из той же выдачи — им подписан вход в архив.
+      const [meResp, page, analytics] = await Promise.all([
         fetchMe(),
-        fetchIdeas(),
+        fetchIdeas({ sort: 'score', limit: TOP_IDEAS }),
         fetchAnalytics(),
       ]);
       setCabinet({
@@ -138,7 +200,8 @@ export default function App() {
           me: meResp.user,
           tariff: meResp.tariff,
           tariffs: meResp.tariffs,
-          ideas,
+          ideas: page.items,
+          ideasTotal: page.total,
           analytics,
         },
       });
@@ -147,8 +210,8 @@ export default function App() {
     }
   }, []);
 
-  const openIdea = useCallback(async (ideaId: number) => {
-    setView({ screen: 'report', from: 'cabinet', ideaId });
+  const openIdea = useCallback(async (ideaId: number, from: Parented = 'cabinet') => {
+    setView({ screen: 'report', from, ideaId });
     setReport({ phase: 'loading' });
     if (isMockCabinet()) {
       setReport({ phase: 'ready', result: mockResult, isMock: true });
@@ -163,7 +226,14 @@ export default function App() {
   }, []);
 
   const goBack = useCallback(() => {
-    setView({ screen: 'cabinet' });
+    // Функциональный setState: «назад» зависит от текущего экрана, а не от
+    // замыкания — иначе из отчёта, открытого из архива, вернулись бы в кабинет.
+    setView((v) => (parentOf(v) === 'ideas' ? { screen: 'ideas' } : { screen: 'cabinet' }));
+  }, []);
+
+  const openAll = useCallback(() => {
+    setArchiveOpened(true);
+    setView({ screen: 'ideas' });
   }, []);
 
   /* ── эффекты ── */
@@ -179,13 +249,13 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Нативный BackButton — только в отчёте, открытом из кабинета.
-  const fromCabinet = view.screen === 'report' && view.from === 'cabinet';
+  // Нативный BackButton — на любом экране, которому есть куда возвращаться.
+  const parent = parentOf(view);
   useEffect(() => {
-    if (!fromCabinet) return;
+    if (!parent) return;
     const cleanup = showBackButton(goBack);
     return cleanup ?? undefined;
-  }, [fromCabinet, goBack]);
+  }, [parent, goBack]);
 
   // Смена экрана — всегда с начала страницы.
   useEffect(() => {
@@ -195,8 +265,7 @@ export default function App() {
   /* ── рендер ── */
 
   // Фолбэк-навигация «← Мои идеи», если нативного BackButton нет.
-  const backFallback =
-    fromCabinet && !backButtonSupported() ? goBack : undefined;
+  const backFallback = parent && !backButtonSupported() ? goBack : undefined;
 
   if (view.screen === 'cabinet') {
     if (cabinet.phase === 'loading') return <CabinetSkeleton />;
@@ -215,8 +284,20 @@ export default function App() {
         tariff={cabinet.data.tariff}
         tariffs={cabinet.data.tariffs}
         ideas={cabinet.data.ideas}
+        ideasTotal={cabinet.data.ideasTotal}
         analytics={cabinet.data.analytics}
-        onOpenIdea={(id) => void openIdea(id)}
+        onOpenIdea={(id) => void openIdea(id, 'cabinet')}
+        onOpenAll={openAll}
+      />
+    );
+  }
+
+  if (view.screen === 'ideas') {
+    return (
+      <IdeasScreen
+        archive={archive}
+        onOpenIdea={(id) => void openIdea(id, 'ideas')}
+        onBack={goBack}
       />
     );
   }

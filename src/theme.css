@@ -642,6 +642,111 @@ body {
   color: var(--muted);
 }
 
+/* поиск по архиву идей — строка на волосяной линии, без подложек и рамок */
+.search {
+  position: relative;
+  margin-top: 22px;
+}
+.search-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0; /* iOS сам скругляет type=search */
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  /* 16px — не косметика: на меньшем размере iOS Safari зумит страницу при фокусе */
+  font-size: 16px;
+  padding: 10px 30px 10px 0;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.search-input::placeholder {
+  color: var(--muted);
+  font-weight: 400;
+}
+.search-input:focus {
+  border-bottom-color: var(--ink);
+}
+/* нативный крестик Safari убираем — свой заметнее и попадает под палец */
+.search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+.search-clear {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  padding: 6px 4px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* порядок списка — текстовые переключатели, активный подчёркнут */
+.sortbar {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  margin-top: 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.sortbar .chip {
+  border: 0;
+  background: transparent;
+  padding: 2px 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--muted);
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sortbar .chip.on {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+.sortbar-count {
+  margin-left: auto;
+  color: var(--muted);
+}
+
+/* пустое состояние / загрузка внутри списка */
+.idea-empty {
+  margin-top: 26px;
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* «показать ещё» и «все идеи» — во всю ширину, тише основного CTA */
+.btn.more {
+  display: block;
+  width: 100%;
+  margin-top: 22px;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+.btn.more:disabled {
+  color: var(--muted);
+  cursor: default;
+  transform: none;
+}
+
 /* команды сервиса — моноширинные команды с описаниями */
 .cmd-group {
   margin-top: 28px;
